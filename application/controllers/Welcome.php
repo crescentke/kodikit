@@ -42,6 +42,13 @@ class Welcome extends CI_Controller {
                 );
                 $this->session->set_userdata('user_ses', $sess_array);
             }
+            //Add logs
+            $log_info = array(
+                'user_id' => $row->user_id,
+                'log_activity' => "Logged in"
+            );
+            $this->Crudmod->add_data('user_logs', $log_info);
+
             return TRUE;
         } else {
             $this->form_validation->set_message('check_database', "The username and password you entered did not match our records. Cross-check and try again.");
