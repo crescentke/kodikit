@@ -42,6 +42,19 @@ class Home extends CI_Controller {
         }
     }
 
+    function sendMail() {
+        if ($this->Insertopp->add_data("contacts", $contact)) {
+            if ($this->Emailopp->send_teamadd_mail($_POST['email'], $defpass)) {
+                $this->sendSMS($_POST['phone'], "You have been registered on Kodikit. Check email for further details.");
+                redirect('a/landlord');
+            } else {
+                echo "Mail could not be send!";
+            }
+        } else {
+            echo "Something went wrong. Try again";
+        }
+    }
+
     function user_group_id() {
         $session_data = $this->session->userdata('user_ses');
         $user_id = $session_data['user_id'];
