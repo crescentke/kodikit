@@ -8,7 +8,7 @@
 
 class Home extends CI_Controller {
 
-    function sendSMS($phoneNumber, $message1) {
+    function sendSMS($phoneNumber, $textMessage) {
 
 
         // Be sure to include the file you've just downloaded
@@ -23,7 +23,7 @@ class Home extends CI_Controller {
         $recipients = $phoneNumber;
 
         // And of course we want our recipients to know what we really do
-        $message = $message1;
+        $message = $textMessage;
 
         // Create a new instance of our awesome gateway class
         $gateway = new AfricasTalkingGateway($username, $apikey);
@@ -42,16 +42,12 @@ class Home extends CI_Controller {
         }
     }
 
-    function sendMail() {
-        if ($this->Insertopp->add_data("contacts", $contact)) {
-            if ($this->Emailopp->send_teamadd_mail($_POST['email'], $defpass)) {
-                $this->sendSMS($_POST['phone'], "You have been registered on Kodikit. Check email for further details.");
-                redirect('a/landlord');
-            } else {
-                echo "Mail could not be send!";
-            }
+    function sendMailPass($def_email, $def_pass, $def_phone, $def_text) {
+        if ($this->Emailopp->send_teamadd_mail($def_email, $def_pass)) {
+            $this->sendSMS($def_phone, $def_text);
+            return TRUE;
         } else {
-            echo "Something went wrong. Try again";
+            return FALSE;
         }
     }
 
@@ -325,6 +321,7 @@ class Home extends CI_Controller {
         $ufname = $_POST['ufname'];
         $ulname = $_POST['ulname'];
         $usname = $_POST['usname'];
+        $uphone = $_POST['uphone'];
         $usgroup = $_POST['usgroup'];
         $uemail = $_POST['uemail'];
 
@@ -360,6 +357,7 @@ class Home extends CI_Controller {
             $data = array(
                 'code' => $ucode,
                 'username' => $usname,
+                'user_phone' => $uphone,
                 'firstname' => $ufname,
                 'lastname' => $ulname,
                 'email' => $uemail,
@@ -370,6 +368,8 @@ class Home extends CI_Controller {
 
             $new_user = $this->Crudmod->add_data("user", $data);
             if ($new_user) {
+                $text_message = "Hello, $usname. We're glad to inform you that you have been registered on Kodikit. Visit your email to configure your account. Thank you.";
+                $this->sendMailPass($uemail, do_hash($upass), $uphone, $text_message);
                 $this->session->set_flashdata('success', ' Success: You have modified users!');
                 redirect(base_url() . 'home/user');
             } else {

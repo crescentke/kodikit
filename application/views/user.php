@@ -225,10 +225,17 @@
                                                     <input type="text" class="form-control" name="ulname" id="ulname" required="" placeholder="Last name">
                                                 </div>
                                             </div>
-                                            <div class="form-group">
-                                                <label for="usname">Username</label>
-                                                <input type="text" class="form-control" name="usname" id="usname" required="" placeholder="Username">
+                                            <div class="row form-group">
+                                                <div class="col-md-6">
+                                                    <label for="usname">Username</label>
+                                                    <input type="text" class="form-control" name="usname" id="usname" required="" placeholder="Username">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="uphone">Phone</label>
+                                                    <input type="number" class="form-control" name="uphone" id="uphone" required="" placeholder="Phone number">
+                                                </div>
                                             </div>
+
                                             <div class="form-group">
                                                 <label for="usgroup">User Group</label>
                                                 <select name="usgroup" id="usgroup" required="" class="form-control" placeholder="Choose user group">
