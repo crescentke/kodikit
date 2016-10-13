@@ -8,6 +8,49 @@
 
 class Home extends CI_Controller {
 
+    function sendSMS($phoneNumber, $textMessage) {
+
+
+        // Be sure to include the file you've just downloaded
+        require_once(APPPATH . 'libraries/AfricasTalkingGateway.php');
+
+        // Specify your login credentials
+        $username = "bluewave";
+        $apikey = "cb02cc32fad5518495c45ee111ea2c5d59f4ba6c57aacf4b2afb25ee197b0321";
+
+        // Specify the numbers that you want to send to in a comma-separated list
+        // Please ensure you include the country code (+254 for Kenya in this case)
+        $recipients = $phoneNumber;
+
+        // And of course we want our recipients to know what we really do
+        $message = $textMessage;
+
+        // Create a new instance of our awesome gateway class
+        $gateway = new AfricasTalkingGateway($username, $apikey);
+
+        // Any gateway errors will be captured by our custom Exception class below, 
+        // so wrap the call in a try-catch block
+        try {
+            // Thats it, hit send and we'll take care of the rest. 
+            $results = $gateway->sendMessage($recipients, $message);
+
+            foreach ($results as $result) {
+                return true;
+            }
+        } catch (AfricasTalkingGatewayException $e) {
+            return false;
+        }
+    }
+
+    function sendMailPass($def_email, $def_pass, $def_phone, $def_text) {
+        if ($this->Emailopp->send_teamadd_mail($def_email, $def_pass)) {
+            $this->sendSMS($def_phone, $def_text);
+            return TRUE;
+        } else {
+            return FALSE;
+        }
+    }
+
     function user_group_id() {
         $session_data = $this->session->userdata('user_ses');
         $user_id = $session_data['user_id'];
@@ -46,7 +89,7 @@ class Home extends CI_Controller {
                 $user_groups = $this->Crudmod->s_where_not('user_group', 'user_group_id', 1);
             }
 
-            
+
             //properties
             if ($this->user_group_id() == 1) {
                 $properties = $this->Crudmod->s_tbl('property');
@@ -55,14 +98,14 @@ class Home extends CI_Controller {
             } else {
                 $properties = $this->Crudmod->s_where_one('property', 'agency', $this->user_agency());
             }
-            
+
             //payment
             $due_amount = 0;
             $paydue = $this->Crudmod->s_where_two('payment', 'tenant_id', $user_id, 'payment_status', 0);
-            foreach ($paydue as $paydue_row){
+            foreach ($paydue as $paydue_row) {
                 $due_amount = number_format($paydue_row->amount_due);
             }
-            
+
             //leases
             if ($this->user_group_id() == 1) {
                 $leases = $this->Crudmod->s_tbl('lease');
@@ -73,7 +116,7 @@ class Home extends CI_Controller {
             } else {
                 $leases = $this->Crudmod->s_where_one('lease', 'agency', $this->user_agency());
             }
-            
+
             if ($this->user_group_id() == 1) {
                 $tenants = $this->Crudmod->s_where_one('user', 'user_group_id', 4);
                 $houses = $this->Crudmod->s_where_one('house', 'house_status', 'Vacant');
@@ -100,6 +143,12 @@ class Home extends CI_Controller {
     }
 
     function logout() {
+        //Add logs
+        $log_info = array(
+            'user_id' => $this->user_group_id(),
+            'log_activity' => "Logged out"
+        );
+        $this->Crudmod->add_data('user_logs', $log_info);
         $this->session->unsetuserdata['user_ses'];
         $this->session->sess_destroy();
 
@@ -272,6 +321,7 @@ class Home extends CI_Controller {
         $ufname = $_POST['ufname'];
         $ulname = $_POST['ulname'];
         $usname = $_POST['usname'];
+        $uphone = $_POST['uphone'];
         $usgroup = $_POST['usgroup'];
         $uemail = $_POST['uemail'];
 
@@ -307,6 +357,7 @@ class Home extends CI_Controller {
             $data = array(
                 'code' => $ucode,
                 'username' => $usname,
+                'user_phone' => $uphone,
                 'firstname' => $ufname,
                 'lastname' => $ulname,
                 'email' => $uemail,
@@ -317,6 +368,8 @@ class Home extends CI_Controller {
 
             $new_user = $this->Crudmod->add_data("user", $data);
             if ($new_user) {
+                $text_message = "Hello, $usname. We're glad to inform you that you have been registered on Kodikit. Visit your email to configure your account. Thank you.";
+                $this->sendMailPass($uemail, do_hash($upass), $uphone, $text_message);
                 $this->session->set_flashdata('success', ' Success: You have modified users!');
                 redirect(base_url() . 'home/user');
             } else {
